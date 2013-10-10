@@ -1,17 +1,13 @@
-#include "Server.hpp"
-#include "ClientSession.hpp"
-#include <stdio.h>      /* printf, scanf, NULL */
 #include <stdlib.h>     /* malloc, free, rand */
 #include <string.h>
-#include <iostream>
-#include <unistd.h>
 #include <fcntl.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
+
+#include <glog/logging.h>
+#include "Server.hpp"
+#include "ClientSession.hpp"
 
 
 Server::Server(const Server& copy)
@@ -43,7 +39,7 @@ void Server::start(const int port)
 {
 	assert(port >= 1024);
 	if (active) stop();
-	printf("Listening on port %d\n", port);
+	LOG(INFO) << "Listening on port " << port;
 	portno = port;
 
 	sockfd = socket(PF_INET, SOCK_STREAM, 0);
@@ -54,7 +50,7 @@ void Server::start(const int port)
 	addr.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
-		perror("bind");
+		LOG(ERROR) << "Server starting: Bind";
 	}
 
 	fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);
@@ -68,7 +64,7 @@ void Server::start(const int port)
 	sig.start(SIGINT);
 
 	active = true;
-	printf("Server started.\n");
+	LOG(INFO) << "Server started.";
 }
 
 void Server::stop()
@@ -81,19 +77,19 @@ void Server::stop()
 	boost::lock_guard<boost::detail::spinlock> clients_guard(clients_lock);
 	clients.clear();
 
-	printf("Server stopped.\n");
+	LOG(INFO) << "Server stopped.";
 }
 
 void Server::signal_cb(ev::sig &signal, int revents)
 {
-	printf("Catch interruption.\n");
+	LOG(INFO) << "Catch interruption.";
 	signal.loop.break_loop();
 }
 
 void Server::accept_cb(ev::io &watcher, int revents)
 {
 	if (EV_ERROR & revents) {
-		perror("got invalid event");
+		LOG(ERROR) << "Got invalid event.";
 		return;
 	}
 
@@ -103,14 +99,14 @@ void Server::accept_cb(ev::io &watcher, int revents)
 	int client_sd = accept(watcher.fd, (struct sockaddr *)&client_addr, &client_len);
 
 	if (client_sd < 0) {
-		perror("accept error");
+		LOG(ERROR) << "Accept error.";
 		return;
 	}
 
 	char client_ip[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(client_addr.sin_addr), client_ip, INET_ADDRSTRLEN);
 
-	printf("client accepted. creating client session\n");
+	LOG(INFO) << "Client accepted. Creating client session.";
 
 	boost::lock_guard<boost::detail::spinlock> clients_guard(clients_lock);
 	ClientSession_sptr client(new ClientSession(clients.size(), client_sd, std::string(client_ip),
@@ -121,10 +117,10 @@ void Server::accept_cb(ev::io &watcher, int revents)
 bool Server::kick_client(const int client_id)
 {
 	boost::lock_guard<boost::detail::spinlock> clients_guard(clients_lock);
-	printf("client %i will be kicked\n", client_id);
+	LOG(INFO) << "Client " << client_id << " will be kicked.";
 	if (client_id < 0 || client_id >= clients.size()) return false;
 
 	clients.erase(clients.begin() + client_id);
-	printf("clients now: %i\n", clients.size());
+	LOG(INFO) << "Clients now: " << clients.size();
 	return true;
 }

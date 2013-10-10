@@ -1,10 +1,10 @@
-#include "ClientSession.hpp"
-#include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <malloc.h>
-#include <unistd.h>
+
+#include <glog/logging.h>
+#include "ClientSession.hpp"
 
 
 ClientSession::ClientSession(const int id, const int sock, const std::string& ip, const free_client_f free_callback)
@@ -20,18 +20,18 @@ ClientSession::ClientSession(const int id, const int sock, const std::string& ip
 {
 	fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);
 
-	printf("Got connection from %s.\n", client_ip.c_str());
+	LOG(INFO) << "Got connection from " << client_ip;
 
 	io.set<ClientSession, &ClientSession::callback>(this);
 	io.start(sockfd, ev::READ);
 
-	printf("client session created\n");
+	LOG(INFO) << "Client session created.";
 }
 
 ClientSession::~ClientSession()
 {
 	free(recv_buffer);
-	printf("Client %s disconnected.\n", client_ip.c_str());
+	LOG(INFO) << "Client " << client_ip << " disconnected.";
 }
 
 inline int ClientSession::id()
@@ -74,26 +74,26 @@ void ClientSession::read_cb(ev::io &watcher)
 		free_client(_id);
 	} else {
 		std::string str(buffer, sizeof(buffer));
-		printf("Receive from %s: %s\n Processing...\n", client_ip.c_str(), str.c_str());
+		LOG(INFO) << "Receive from " << client_ip << ": " << str << ". Processing...";
 		// Expand inner buffer if remaind free memory less than size of received data
 		if (buffer_size == 0) {
 			buffer_size = 10;
 			recv_buffer = malloc(buffer_size);
-			printf(" Inner buffer expanded to %li\n", buffer_size);
+			LOG(INFO) << "Inner buffer expanded to " << buffer_size;
 		} else if (buffer_size - data_size < nread) {
 			buffer_size += 10;
 			void * new_buffer = malloc(buffer_size);
 			memcpy(new_buffer, recv_buffer, data_size);
 			free(recv_buffer);
 			recv_buffer = new_buffer;
-			printf(" Inner buffer expanded to %li\n", buffer_size);
+			LOG(INFO) << "Inner buffer expanded to " << buffer_size;
 		}
 		// Copying data at the end of buffer
 		char * dest = static_cast<char *>(recv_buffer) + data_size;
 		memcpy(dest, buffer, nread);
 		data_size += nread;
 		// Done
-		printf(" Done (read %li, buffer size %li, remain free %li)\n", nread, buffer_size, buffer_size - data_size);
+		LOG(INFO) << "Done (read " << nread << ", buffer size " << buffer_size << ", remain free " << buffer_size - data_size << ")";
 		process_buffer();
 		if (sockfd) io.set(ev::READ);
 	}
@@ -124,13 +124,13 @@ void ClientSession::process_buffer()
 
 void ClientSession::process_queue()
 {
-	printf("client thread: started\n");
+	LOG(INFO) << "Client thread: started.";
 	while (sockfd) {
 		std::string msg = messages.pop();
 		if (msg.empty()) continue;
 		process_packet(msg);
 	}
-	printf("client thread: done\n");
+	LOG(INFO) << "Client thread: done.";
 }
 
 void ClientSession::process_packet(const std::string & packet)

@@ -3,7 +3,6 @@
 
 #include <pthread.h>
 #include <list>
-#include <cstdio>
 
 template <typename T>
 class wqueue
