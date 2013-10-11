@@ -8,9 +8,10 @@
 
 
 ClientSession::ClientSession(const int id, const int sock, const std::string& ip, const free_client_f free_callback)
-: _id(id)
+: m_id(id)
+, m_name()
 , sockfd(sock)
-, client_ip(ip)
+, m_client_ip(ip)
 , recv_buffer(NULL)
 , buffer_size(0)
 , data_size(0)
@@ -20,7 +21,7 @@ ClientSession::ClientSession(const int id, const int sock, const std::string& ip
 {
 	fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);
 
-	LOG(INFO) << "Got connection from " << client_ip;
+	LOG(INFO) << "Got connection from " << m_client_ip;
 
 	io.set<ClientSession, &ClientSession::callback>(this);
 	io.start(sockfd, ev::READ);
@@ -31,12 +32,12 @@ ClientSession::ClientSession(const int id, const int sock, const std::string& ip
 ClientSession::~ClientSession()
 {
 	free(recv_buffer);
-	LOG(INFO) << "Client " << client_ip << " disconnected.";
+	LOG(INFO) << "Client " << m_client_ip << " disconnected.";
 }
 
 inline int ClientSession::id()
 {
-	return _id;
+	return m_id;
 }
 
 void ClientSession::callback(ev::io &watcher, int revents)
@@ -71,10 +72,10 @@ void ClientSession::read_cb(ev::io &watcher)
 		messages.release_consumers();
 		queue_processor.join();
 		// Remove itself from client list of server for destroing
-		free_client(_id);
+		free_client(m_id);
 	} else {
 		std::string str(buffer, sizeof(buffer));
-		LOG(INFO) << "Receive from " << client_ip << ": " << str << ". Processing...";
+		LOG(INFO) << "Receive from " << m_client_ip << ": " << str << ". Processing...";
 		// Expand inner buffer if remaind free memory less than size of received data
 		if (buffer_size == 0) {
 			buffer_size = 10;

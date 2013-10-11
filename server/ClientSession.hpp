@@ -16,11 +16,12 @@ public:
 	int id();
 
 private:
-	int _id;
+	int m_id;					/** index in session list of server */
+	std::string m_name;			/** unique name of client */
 
 	ev::io io;
 	int sockfd;
-	std::string client_ip;		/** ip-addres of client */
+	std::string m_client_ip;	/** ip-addres of client */
 
 	void * recv_buffer;			/** buffer for received data */
 	std::size_t buffer_size;	/** size of buffer of received data */

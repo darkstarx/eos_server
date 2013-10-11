@@ -17,6 +17,7 @@ build
 
 # Trash
 *~
+*.cache
 
 # IDE Project files
 *.kdev4

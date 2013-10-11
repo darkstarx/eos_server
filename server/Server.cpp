@@ -10,14 +10,6 @@
 #include "ClientSession.hpp"
 
 
-Server::Server(const Server& copy)
-: active(false)
-, portno(0)
-, sockfd(0)
-, clients()
-{
-}
-
 Server::Server()
 : active(false)
 , portno(0)
@@ -31,15 +23,26 @@ Server::~Server()
 	stop();
 }
 
+/** private (noncopyable) */
+Server::Server(const Server& copy)
+: active(false)
+, portno(0)
+, sockfd(0)
+, clients()
+{
+}
+
+/** private (noncopyable) */
 Server& Server::operator=(const Server& )
 {
 }
 
 void Server::start(const int port)
 {
+	if (active) return;
+
 	assert(port >= 1024);
 	if (active) stop();
-	LOG(INFO) << "Listening on port " << port;
 	portno = port;
 
 	sockfd = socket(PF_INET, SOCK_STREAM, 0);
@@ -50,7 +53,7 @@ void Server::start(const int port)
 	addr.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
-		LOG(ERROR) << "Server starting: Bind";
+		LOG(ERROR) << "Server starting: binding socket with address";
 	}
 
 	fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);
@@ -64,11 +67,13 @@ void Server::start(const int port)
 	sig.start(SIGINT);
 
 	active = true;
-	LOG(INFO) << "Server started.";
+	LOG(INFO) << "Server started. Listening on port " << port;
 }
 
 void Server::stop()
 {
+	if (!active) return;
+
 	io.stop();
 	shutdown(sockfd, SHUT_RDWR);
 	close(sockfd);

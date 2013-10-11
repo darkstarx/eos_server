@@ -6,7 +6,6 @@
 #include <vector>
 #include <list>
 #include <boost/smart_ptr/detail/spinlock.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include "ClientSession_fwd.hpp"
 
