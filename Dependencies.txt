@@ -1,3 +1,6 @@
 To build this project you should install libraries:
- - libboost-thread (it is recommended to install boost-devel)
+ - libboost-thread-devel (it is recommended to install boost-devel)
+ - libboost-program-options-devel (it is recommended to install boost-devel)
  - libev-devel
+
+Requires Boost 1.48 and greater

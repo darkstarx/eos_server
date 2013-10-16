@@ -53,7 +53,7 @@ void Server::start(const int port)
 	addr.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
-		LOG(ERROR) << "Server starting: binding socket with address";
+		LOG(FATAL) << "Server starting: binding socket with address";
 	}
 
 	fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);

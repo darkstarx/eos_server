@@ -27,7 +27,7 @@ set(GLOG_LIBRARIES ${GLOG_LIBRARY})
 message(STATUS "GLog includes: ${GLOG_INCLUDE_DIR} Libraries: ${GLOG_LIBRARIES}" )
 
 # Boost thread library required
-find_package(Boost 1.48 COMPONENTS thread REQUIRED)
+find_package(Boost 1.48 COMPONENTS thread program_options REQUIRED)
 
 include_directories(
 	${Boost_INCLUDE_DIR}
