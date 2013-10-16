@@ -6,28 +6,28 @@ project(eos_server)
 message(STATUS "Building glog in ${CMAKE_BINARY_DIR}/libs/glog-compile...")
 execute_process(COMMAND mkdir -p ${CMAKE_BINARY_DIR}/libs/glog-compile)
 execute_process(
-COMMAND ${CMAKE_SOURCE_DIR}/libs/glog/configure --prefix=${CMAKE_BINARY_DIR}/libs/glog
-WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/libs/glog-compile
-OUTPUT_QUIET
-OUTPUT_FILE "configure.log"
+	COMMAND ${CMAKE_SOURCE_DIR}/libs/glog/configure --prefix=${CMAKE_BINARY_DIR}/libs/glog
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/libs/glog-compile
+	OUTPUT_QUIET
+	OUTPUT_FILE "configure.log"
 )
 message(STATUS "Installing glog in ${CMAKE_BINARY_DIR}/libs/glog...")
 execute_process(
-COMMAND make install
-WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/libs/glog-compile
-OUTPUT_QUIET
+	COMMAND make install
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/libs/glog-compile
+	OUTPUT_QUIET
 )
 set(GLOG_INCLUDE_DIR ${CMAKE_BINARY_DIR}/libs/glog/include)
-FIND_LIBRARY(GLOG_LIBRARY
-NAMES glog
-PATHS
-${CMAKE_BINARY_DIR}/libs/glog/lib/
+find_library(GLOG_LIBRARY
+	NAMES glog
+	PATHS
+		${CMAKE_BINARY_DIR}/libs/glog/lib/
 )
 set(GLOG_LIBRARIES ${GLOG_LIBRARY})
 message(STATUS "GLog includes: ${GLOG_INCLUDE_DIR} Libraries: ${GLOG_LIBRARIES}" )
 
 # Boost thread library required
-find_package(Boost 1.49 COMPONENTS thread REQUIRED)
+find_package(Boost 1.48 COMPONENTS thread REQUIRED)
 
 include_directories(
 	${Boost_INCLUDE_DIR}
