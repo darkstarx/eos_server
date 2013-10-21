@@ -4,13 +4,15 @@
 #include <ClientSession.hpp>
 
 
-class WorldSession : public ClientSession
+class WorldSession : public ClientSession, public boost::enable_shared_from_this<WorldSession>
 {
+	typedef boost::shared_ptr<WorldSession> WorldSession_sptr;
 public:
-	WorldSession(const int id, const int sock, const std::string &ip, const free_client_f free_callback);
+	WorldSession(const int sock, const std::string &ip);
 	virtual ~WorldSession();
-private:
-	std::string name;	/** Name of world. Unique for one proxy. */
+
+	virtual void enter_room(IRoom_sptr room);
+	virtual void leave_room();
 };
 
 #endif // WORLDSESSION_HPP

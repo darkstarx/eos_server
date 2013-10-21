@@ -7,6 +7,7 @@
 
 #include <glog/logging.h>
 #include "Server.hpp"
+#include "ReceptionRoom.hpp"
 #include "PlayerSession.hpp"
 #include "WorldSession.hpp"
 
@@ -17,8 +18,7 @@ Server::Server()
 , c_sockfd(0)
 , w_portno(0)
 , w_sockfd(0)
-, players()
-, worlds()
+, reception(new ReceptionRoom())
 {
 }
 
@@ -34,8 +34,7 @@ Server::Server(const Server& copy)
 , c_sockfd(0)
 , w_portno(0)
 , w_sockfd(0)
-, players()
-, worlds()
+, reception(new ReceptionRoom())
 {
 }
 
@@ -101,9 +100,6 @@ void Server::stop()
 	close(w_sockfd);
 	active = false;
 
-	boost::lock_guard<boost::detail::spinlock> players_guard(players_lock);
-	players.clear();
-
 	LOG(INFO) << "Server stopped.";
 }
 
@@ -135,10 +131,8 @@ void Server::accept_cb(ev::io &watcher, int revents)
 
 	LOG(INFO) << "Player accepted. Creating player session.";
 
-	boost::lock_guard<boost::detail::spinlock> players_guard(players_lock);
-	PlayerSession_sptr player(new PlayerSession(players.size(), client_sd, std::string(client_ip),
-		boost::bind(&Server::kick_player, this, _1)));
-	players.push_back(player);
+	PlayerSession_sptr player(new PlayerSession(client_sd, std::string(client_ip)));
+	player->enter_room(reception);
 }
 
 void Server::accept_w_cb(ev::io &watcher, int revents)
@@ -163,30 +157,6 @@ void Server::accept_w_cb(ev::io &watcher, int revents)
 
 	LOG(INFO) << "World accepted. Creating world session.";
 
-	boost::lock_guard<boost::detail::spinlock> worlds_guard(worlds_lock);
-	WorldSession_sptr client(new WorldSession(worlds.size(), client_sd, std::string(client_ip),
-		boost::bind(&Server::kick_world, this, _1)));
-	worlds.push_back(client);
-}
-
-bool Server::kick_player(const int player_id)
-{
-	boost::lock_guard<boost::detail::spinlock> players_guard(players_lock);
-	LOG(INFO) << "Player " << player_id << " will be kicked.";
-	if (player_id < 0 || player_id >= players.size()) return false;
-
-	players.erase(players.begin() + player_id);
-	LOG(INFO) << "Players now: " << players.size();
-	return true;
-}
-
-bool Server::kick_world(const int world_id)
-{
-	boost::lock_guard<boost::detail::spinlock> worlds_guard(worlds_lock);
-	LOG(INFO) << "World " << world_id << " will be destroyed.";
-	if (world_id < 0 || world_id >= worlds.size()) return false;
-
-	worlds.erase(worlds.begin() + world_id);
-	LOG(INFO) << "Worlds now: " << worlds.size();
-	return true;
+	WorldSession_sptr world(new WorldSession(client_sd, std::string(client_ip)));
+	reception->join_world(world);
 }

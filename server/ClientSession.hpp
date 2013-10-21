@@ -4,36 +4,44 @@
 #include <ev++.h>
 #include <boost/thread.hpp>
 #include <boost/function.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <wqueue.hpp>
+#include <Room_fwd.hpp>
+#include "IRoom.hpp"
 
 class ClientSession
 {
-	typedef boost::function<bool(int)> free_client_f;
 public:
-	ClientSession(const int id, const int sock, const std::string &ip, const free_client_f free_callback);
+	ClientSession(const int sock, const std::string &ip);
 	virtual ~ClientSession();
 
-	int id();
+	virtual IRoom_sptr room() const;
+	virtual std::string name() const;
+
+	virtual void enter_room(IRoom_sptr room) = 0;
+	virtual void leave_room() = 0;
+
+protected:
+	IRoom_sptr m_room;
 
 private:
-	int m_id;					/** index in session list of server */
-	std::string m_name;			/** unique name of client */
+	static std::size_t buffer_growth;	/** size of buffer growth */
+	std::string m_name;					/** unique name of client */
 
-	ev::io io;
-	int sockfd;
-	std::string m_client_ip;	/** ip-addres of client */
+	ev::io m_io;
+	int m_sockfd;
+	std::string m_client_ip;			/** ip-addres of client */
 
-	void * recv_buffer;			/** buffer for received data */
-	std::size_t buffer_size;	/** size of buffer of received data */
-	std::size_t data_size;		/** size of received data in buffer */
+	void * m_recv_buffer;				/** buffer for received data */
+	std::size_t m_buffer_size;			/** size of buffer of received data */
+	std::size_t m_data_size;			/** size of received data in buffer */
 
-	wqueue<std::string> messages;	/** threadsafe queue of received messages */
+	wqueue<std::string> m_messages;	/** threadsafe queue of received messages */
+
+	boost::thread m_queue_processor;
 
 	void callback(ev::io &watcher, int revents);
 	void read_cb(ev::io &watcher);
-
-	free_client_f free_client;
-	boost::thread queue_processor;
 
 	/** @brief Processing received data
 	 * Extracts messages from buffer and pushes them into the message queue */
