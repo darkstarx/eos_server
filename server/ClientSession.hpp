@@ -39,9 +39,15 @@ private:
 	 * Extracts messages from buffer and pushes them into the message queue */
 	void process_buffer();
 
+	/** @brief Processing the queue of received messages
+	 * Extracts message from queue and sends one for processing */
 	void process_queue();
+
+	/** @brief Processing the message
+	 * Sends the message to dispatcher for processing */
 	void process_packet(const std::string & packet);
 
+	/** @brief Sending message to client */
 	void send_string(const std::string & msg);
 };
 

@@ -12,7 +12,8 @@
 
 class Server
 {
-	typedef std::vector<ClientSession_sptr> clients_t;
+	typedef std::vector<PlayerSession_sptr> players_t;
+	typedef std::vector<WorldSession_sptr> worlds_t;
 
 public:
 	enum { BUFFER_SIZE = 10 };
@@ -24,28 +25,35 @@ public:
 	}
 	~Server();
 
-	void start(const int port);
+	void start(const int c_port, const int w_port);
 	void stop();
 
-	bool kick_client(const int client_id);
+	bool kick_player(const int player_id);
+	bool kick_world(const int world_id);
 
 private:
 	Server();
 	Server(const Server& copy);
 	Server& operator=(const Server&);
 
-	ev::io io;
+	ev::io cio;
+	ev::io wio;
 	ev::sig sig;
 
 	int active;
-	int portno;
-	int sockfd;
+	int c_portno;
+	int c_sockfd;
+	int w_portno;
+	int w_sockfd;
 
 	void accept_cb(ev::io &watcher, int revents);
+	void accept_w_cb(ev::io &watcher, int revents);
 	static void signal_cb(ev::sig &signal, int revents);
 
-	clients_t clients;
-	boost::detail::spinlock clients_lock;
+	players_t players;
+	worlds_t worlds;
+	boost::detail::spinlock players_lock;
+	boost::detail::spinlock worlds_lock;
 };
 
 #endif // SERVER_HPP

@@ -13,12 +13,13 @@ int main(int argc, char * argv[])
 	FLAGS_colorlogtostderr = true;
 	google::InitGoogleLogging(argv[0]);
 
-	int port_no;
+	int c_port_no, w_port_no;
 
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("help,h", "produce help message.")
-		("port,p", po::value<int>(&port_no)->default_value(1024), "The port to listen on. Must be greater than or equal 1024. Default is 1024.")
+		("clients-port,cp", po::value<int>(&c_port_no)->default_value(1025), "The port to listen clients on. Must be greater than 1024. Default is 1025.")
+		("worlds-port,wp", po::value<int>(&w_port_no)->default_value(1026), "The port to listen worlds on. Must be greater than 1024. Default is 1026.")
 	;
 
 	po::variables_map vm;
@@ -39,15 +40,15 @@ int main(int argc, char * argv[])
 		return 1;
 	}
 
-	if (port_no < 1024) {
+	if (c_port_no <= 1024 || w_port_no <= 1024) {
 		std::stringstream str;
 		str << desc;
-		fprintf(stderr, " bad port number: %i\n usage: %s [options]\n%s\n", port_no, argv[0], str.str().c_str());
+		fprintf(stderr, " bad port number: %i\n usage: %s [options]\n%s\n", c_port_no <= 1024 ? c_port_no : w_port_no, argv[0], str.str().c_str());
 		return 1;
 	}
 
 	ev::default_loop loop;
-	Server::Instance().start(port_no);
+	Server::Instance().start(c_port_no, w_port_no);
 	loop.run(0);
 	return 0;
 }
