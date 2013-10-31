@@ -19,5 +19,8 @@ build
 *~
 *.cache
 
+# Compiled Protocol
+protocol/src/*
+
 # IDE Project files
 *.kdev4
