@@ -24,6 +24,8 @@ Server::Server()
 
 Server::~Server()
 {
+	// Если забыли остановить сервер после завершения основного цикла программы,
+	// делаем это при разрушении объекта сервера.
 	stop();
 }
 
@@ -60,8 +62,9 @@ void Server::start(const int c_port, const int w_port)
 
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(c_port);
 	addr.sin_addr.s_addr = INADDR_ANY;
+	
+	addr.sin_port = htons(c_port);
 	if (bind(c_sockfd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
 		LOG(FATAL) << "Server starting: binding clientside socket with address";
 	}
@@ -98,8 +101,9 @@ void Server::stop()
 	wio.stop();
 	shutdown(w_sockfd, SHUT_RDWR);
 	close(w_sockfd);
-	active = false;
+	sig.stop();
 
+	active = false;
 	LOG(INFO) << "Server stopped.";
 }
 

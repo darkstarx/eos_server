@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(eos_server)
 
-
 # google-glog
 set(GLOG_LIB_DIR ${CMAKE_BINARY_DIR}/libs/glog/lib)
 message(STATUS "Searching for glog library: ${GLOG_LIB_DIR}")
@@ -27,7 +26,11 @@ if(NOT GLOG_LIBRARY)
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/libs/glog-compile
 		OUTPUT_QUIET
 	)
-	set(GLOG_LIBRARY ${CMAKE_BINARY_DIR}/libs/glog/lib/libglog.so)
+	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		set(GLOG_LIBRARY ${CMAKE_BINARY_DIR}/libs/glog/lib64/libglog.so)
+	else(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		set(GLOG_LIBRARY ${CMAKE_BINARY_DIR}/libs/glog/lib/libglog.so)
+	endif(CMAKE_SIZEOF_VOID_P EQUAL 8)
 endif(NOT GLOG_LIBRARY)
 set(GLOG_LIBRARIES ${GLOG_LIBRARY})
 message(STATUS "GLog includes: ${GLOG_INCLUDE_DIR} Libraries: ${GLOG_LIBRARIES}" )
@@ -41,7 +44,7 @@ execute_process(
 )
 
 # Boost thread library required
-find_package(Boost 1.48 COMPONENTS thread program_options REQUIRED)
+find_package(Boost 1.48 COMPONENTS system thread program_options REQUIRED)
 
 include_directories(
 	${Boost_INCLUDE_DIR}
@@ -53,6 +56,10 @@ include_directories(
 # Subfolders contain source files (temporary no libraryes, only one executable)
 file(GLOB utils_SOURCES ${CMAKE_SOURCE_DIR}/utils/*.hpp ${CMAKE_SOURCE_DIR}/utils/*.cpp)
 file(GLOB server_SOURCES ${CMAKE_SOURCE_DIR}/server/*.hpp ${CMAKE_SOURCE_DIR}/server/*.cpp)
+
+add_definitions(
+    -std=c++11
+)
 
 add_executable(${PROJECT_NAME} ${utils_SOURCES} ${server_SOURCES} main.cpp)
 

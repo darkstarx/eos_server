@@ -1,9 +1,10 @@
 To configure this project correctly you should install libraries:
- - brotobuf (version >= 2.4.1)
+ - protobuf (version >= 2.4.1)
 
 To build this project you should install libraries:
- - libboost-thread-devel (it is recommended to install boost-devel)
- - libboost-program-options-devel (it is recommended to install boost-devel)
+ - libboost-thread-devel
+ - libboost-program-options-devel
+ - libboost-system
  - libev-devel
 
 Requires Boost 1.48 and greater

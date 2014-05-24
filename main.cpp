@@ -1,6 +1,5 @@
 #include <stdio.h>      /* printf, scanf, NULL */
 #include <string.h>
-#include <ev.h>
 #include <glog/logging.h>
 #include <Server.hpp>
 #include <boost/program_options.hpp>
@@ -25,7 +24,7 @@ int main(int argc, char * argv[])
 	po::variables_map vm;
 	try {
 		po::store(po::parse_command_line(argc, argv, desc), vm);
-	} catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::program_options::unknown_option> > e) {
+	} catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<po::unknown_option> > e) {
 		std::cout << "Unknown parameters" << std::endl;
 		std::cout << desc << std::endl;
 		return 1;
@@ -48,7 +47,13 @@ int main(int argc, char * argv[])
 	}
 
 	ev::default_loop loop;
-	Server::Instance().start(c_port_no, w_port_no);
+	// Запускаем сервер
+	Server::instance().start(c_port_no, w_port_no);
+	// Запускаем цикл ожидания сигналов от сокетов и системы
 	loop.run(0);
+	// Останавливаем сервер и завершаем приложение
+	Server::instance().stop();
+	
+	LOG(INFO) << "Application terminated normally.";
 	return 0;
 }

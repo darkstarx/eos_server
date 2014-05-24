@@ -1,11 +1,13 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+// Отключаем совместимость libev4 со старой версией (3)
+#define EV_COMPAT3 0
+
 #include <assert.h>
 #include <ev++.h>
 #include <vector>
 #include <list>
-#include <boost/smart_ptr/detail/spinlock.hpp>
 
 #include <ClientSession_fwd.hpp>
 #include <Room_fwd.hpp>
@@ -16,7 +18,7 @@ class Server
 public:
 	enum { BUFFER_SIZE = 10 };
 
-	static Server& Instance()
+	static Server& instance()
 	{
 		static Server singleton;
 		return singleton;
